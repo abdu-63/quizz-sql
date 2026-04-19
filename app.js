@@ -99,6 +99,7 @@
     navBtns: $$('.nav-btn[data-view]'),
     statScoreValue: $('#stat-score-value'),
     statReviewValue: $('#stat-review-value'),
+    navBrand: $('.nav-brand'),
 
     // Home
     quizCountOptions: $$('#quiz-count-options .config-btn'),
@@ -291,6 +292,11 @@
     els.drawerOverlay.addEventListener('click', closeDrawer);
 
     // Nav
+    els.navBrand.addEventListener('click', () => {
+      closeDrawer();
+      navigateTo('home');
+    });
+
     els.navBtns.forEach((b) => b.addEventListener('click', () => {
       closeDrawer();
       const view = b.dataset.view;
