@@ -202,9 +202,12 @@
           <div class="quiz-progress-bar" id="quiz-progress-bar"></div>
           <div class="quiz-progress-text" id="quiz-progress-text">1 / 10</div>
         </div>
-        <div class="quiz-meta" id="quiz-meta">
-          <span class="badge badge-category" id="quiz-category">SELECT</span>
-          <span class="badge badge-difficulty" id="quiz-difficulty">facile</span>
+        <div class="quiz-meta-container">
+          <div class="quiz-meta" id="quiz-meta">
+            <span class="badge badge-category" id="quiz-category">SELECT</span>
+            <span class="badge badge-difficulty" id="quiz-difficulty">facile</span>
+          </div>
+          <button class="btn-prev-question" id="btn-quiz-prev" title="Question précédente">← Préc.</button>
         </div>
         <div class="quiz-question" id="quiz-question">
           <h2 id="quiz-question-text"></h2>
@@ -254,10 +257,13 @@
           <div class="quiz-progress-bar" id="wq-progress-bar"></div>
           <div class="quiz-progress-text" id="wq-progress-text">1 / 10</div>
         </div>
-        <div class="quiz-meta" id="wq-meta">
-          <span class="badge badge-category" id="wq-category">SELECT</span>
-          <span class="badge badge-difficulty" id="wq-difficulty">facile</span>
-          <span class="badge badge-type-written">ÉCRIT</span>
+        <div class="quiz-meta-container">
+          <div class="quiz-meta" id="wq-meta">
+            <span class="badge badge-category" id="wq-category">SELECT</span>
+            <span class="badge badge-difficulty" id="wq-difficulty">facile</span>
+            <span class="badge badge-type-written">ÉCRIT</span>
+          </div>
+          <button class="btn-prev-question" id="btn-wq-prev" title="Question précédente">← Préc.</button>
         </div>
         <div class="quiz-question" id="wq-question">
           <h2 id="wq-question-text"></h2>
@@ -348,9 +354,14 @@
           <div class="quiz-progress-bar" id="exam-progress-bar"></div>
           <div class="quiz-progress-text" id="exam-progress-text">1 / 9</div>
         </div>
+        <div class="quiz-meta-container">
+          <div class="quiz-meta" style="margin-bottom:0;">
+            <div class="exam-points badge" id="exam-points" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); border-color: rgba(139, 92, 246, 0.2);"></div>
+          </div>
+          <button class="btn-prev-question" id="btn-exam-prev" title="Question précédente">← Préc.</button>
+        </div>
         <!-- Question -->
         <div class="quiz-question" id="exam-question">
-          <div class="exam-points" id="exam-points"></div>
           <h2 id="exam-question-text"></h2>
         </div>
         <!-- Answer area -->

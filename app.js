@@ -143,6 +143,7 @@
     resultsWrong: $('#results-wrong'),
     btnResultsHome: $('#btn-results-home'),
     btnResultsRetry: $('#btn-results-retry'),
+    btnQuizPrev: $('#btn-quiz-prev'),
 
     // Written Quiz
     wqContainer: $('#view-written .quiz-container'),
@@ -168,6 +169,7 @@
     wqResultsWrong: $('#wq-results-wrong'),
     btnWqResultsHome: $('#btn-wq-results-home'),
     btnWqResultsRetry: $('#btn-wq-results-retry'),
+    btnWqPrev: $('#btn-wq-prev'),
     // Annexe
     wqAnnexeSection: $('#wq-annexe-section'),
     annexeToggle: $('#annexe-toggle'),
@@ -202,6 +204,7 @@
     examResultsWrong: $('#exam-results-wrong'),
     btnExamResultsHome: $('#btn-exam-results-home'),
     btnExamResultsBack: $('#btn-exam-results-back'),
+    btnExamPrev: $('#btn-exam-prev'),
 
     // Flashcards
     fcTitle: $('#fc-title'),
@@ -371,6 +374,7 @@
     els.btnNextQuestion.addEventListener('click', nextQuestion);
     els.btnResultsHome.addEventListener('click', () => navigateTo('home'));
     els.btnResultsRetry.addEventListener('click', () => startQuiz('revision'));
+    els.btnQuizPrev.addEventListener('click', prevQuestion);
 
     // Written
     els.btnWqCheck.addEventListener('click', checkWrittenAnswer);
@@ -378,6 +382,7 @@
     els.btnWqWrong.addEventListener('click', () => evaluateWritten(false));
     els.btnWqResultsHome.addEventListener('click', () => navigateTo('home'));
     els.btnWqResultsRetry.addEventListener('click', () => startWrittenQuiz('revision'));
+    els.btnWqPrev.addEventListener('click', prevWrittenQuestion);
 
     // Annexe toggle (written quiz)
     els.annexeToggle.addEventListener('click', () => {
@@ -394,6 +399,7 @@
     els.examAnnexeToggle.addEventListener('click', () => {
       els.examAnnexeSection.classList.toggle('open');
     });
+    els.btnExamPrev.addEventListener('click', prevExamQuestion);
 
     // Flashcards
     els.flashcard.addEventListener('click', () => els.flashcard.classList.toggle('flipped'));
@@ -507,6 +513,7 @@
     state.correctCount = 0;
     state.wrongCount = 0;
     state.answered = false;
+    state.quizHistory = []; // Add history tracking for prev button
 
     if (mode === 'revision') {
       const ids = getReviewList();
@@ -563,10 +570,12 @@
     const stats = getStats();
     stats.totalAnswered++;
     if (ok) {
+      state.quizHistory[state.currentQuestionIndex] = true;
       state.correctCount++;
       stats.totalCorrect++;
       if (state.quizMode === 'revision') { const rl = getReviewList(); setReviewList(rl.filter((id) => id !== q.id)); }
     } else {
+      state.quizHistory[state.currentQuestionIndex] = false;
       state.wrongCount++;
       const rl = getReviewList();
       if (!rl.includes(q.id)) { rl.push(q.id); setReviewList(rl); }
@@ -582,6 +591,24 @@
 
     els.btnNextQuestion.querySelector('span').textContent = state.currentQuestionIndex === state.quizQuestions.length - 1 ? 'Voir les résultats' : 'Question suivante';
     setTimeout(() => els.quizExplanation.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+  }
+
+  function prevQuestion() {
+    if (state.currentQuestionIndex > 0) {
+      const wasCorrect = state.quizHistory[state.currentQuestionIndex - 1];
+      if (wasCorrect !== undefined) {
+        state.quizHistory[state.currentQuestionIndex - 1] = undefined;
+        const stats = getStats();
+        stats.totalAnswered--;
+        if (wasCorrect) { state.correctCount--; stats.totalCorrect--; }
+        else { state.wrongCount--; }
+        setStats(stats);
+        updateNavStats();
+      }
+      state.currentQuestionIndex--;
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   function nextQuestion() {
@@ -623,6 +650,7 @@
     state.wqWrongCount = 0;
     state.wqChecked = false;
     state.wqEvaluated = false;
+    state.wqHistory = [];
 
     if (mode === 'revision') {
       const ids = getWrittenReviewList();
@@ -682,12 +710,14 @@
     stats.totalAnswered++;
 
     if (ok) {
+      state.wqHistory[state.wqCurrentIndex] = true;
       state.wqCorrectCount++;
       stats.totalCorrect++;
       els.btnWqCorrect.classList.add('active-correct');
       const list = getWrittenReviewList();
       if (list.includes(q.id)) setWrittenReviewList(list.filter((id) => id !== q.id));
     } else {
+      state.wqHistory[state.wqCurrentIndex] = false;
       state.wqWrongCount++;
       els.btnWqWrong.classList.add('active-wrong');
       const list = getWrittenReviewList();
@@ -697,6 +727,24 @@
     setStats(stats);
     updateNavStats();
     setTimeout(nextWrittenQuestion, 800);
+  }
+
+  function prevWrittenQuestion() {
+    if (state.wqCurrentIndex > 0) {
+      const wasCorrect = state.wqHistory[state.wqCurrentIndex - 1];
+      if (wasCorrect !== undefined) {
+        state.wqHistory[state.wqCurrentIndex - 1] = undefined;
+        const stats = getStats();
+        stats.totalAnswered--;
+        if (wasCorrect) { state.wqCorrectCount--; stats.totalCorrect--; }
+        else { state.wqWrongCount--; }
+        setStats(stats);
+        updateNavStats();
+      }
+      state.wqCurrentIndex--;
+      renderWrittenQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   function nextWrittenQuestion() {
@@ -757,6 +805,7 @@
     state.examWrongCount = 0;
     state.examChecked = false;
     state.examEvaluated = false;
+    state.examHistory = [];
 
     els.examSelection.classList.add('hidden');
     els.examContainer.classList.remove('hidden');
@@ -813,14 +862,30 @@
     state.examEvaluated = true;
 
     if (ok) {
+      state.examHistory[state.examCurrentIndex] = true;
       state.examCorrectCount++;
       els.btnExamCorrect.classList.add('active-correct');
     } else {
+      state.examHistory[state.examCurrentIndex] = false;
       state.examWrongCount++;
       els.btnExamWrong.classList.add('active-wrong');
     }
 
     setTimeout(nextExamQuestion, 800);
+  }
+
+  function prevExamQuestion() {
+    if (state.examCurrentIndex > 0) {
+      const wasCorrect = state.examHistory[state.examCurrentIndex - 1];
+      if (wasCorrect !== undefined) {
+        state.examHistory[state.examCurrentIndex - 1] = undefined;
+        if (wasCorrect) state.examCorrectCount--;
+        else state.examWrongCount--;
+      }
+      state.examCurrentIndex--;
+      renderExamQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   function nextExamQuestion() {
