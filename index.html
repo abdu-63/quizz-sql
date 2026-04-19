@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Master — Quiz interactif pour maîtriser le SQL</title>
+  <meta name="description" content="Application web interactive pour apprendre et maîtriser le SQL : quiz QCM, quiz écrit, évaluations et flashcards." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ═══════════════════ NAV ═══════════════════ -->
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚡</span>
+      <span class="nav-title">SQL<span class="accent">Master</span></span>
+    </div>
+    <div class="nav-links" id="nav-links">
+      <button class="nav-btn active" data-view="home" id="nav-home">
+        <span class="nav-btn-icon">🏠</span> Accueil
+      </button>
+      <button class="nav-btn" data-view="quiz" id="nav-quiz">
+        <span class="nav-btn-icon">🧠</span> Quiz
+      </button>
+      <button class="nav-btn" data-view="written" id="nav-written">
+        <span class="nav-btn-icon">✍️</span> Écrit
+      </button>
+      <button class="nav-btn" data-view="exams" id="nav-exams">
+        <span class="nav-btn-icon">📝</span> Évals
+      </button>
+      <button class="nav-btn" data-view="flashcards" id="nav-flashcards">
+        <span class="nav-btn-icon">🃏</span> Flashcards
+      </button>
+    </div>
+    <div class="nav-right">
+      <div class="nav-stats" id="nav-stats">
+        <div class="stat-pill" id="stat-score" title="Score global">
+          <span class="stat-icon">🏆</span>
+          <span class="stat-value" id="stat-score-value">0%</span>
+        </div>
+        <div class="stat-pill" id="stat-review" title="Questions à réviser">
+          <span class="stat-icon">🔄</span>
+          <span class="stat-value" id="stat-review-value">0</span>
+        </div>
+      </div>
+      <button class="burger-btn" id="burger-btn" aria-label="Menu" aria-expanded="false">
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+      </button>
+    </div>
+  </nav>
+  <!-- Mobile drawer overlay -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+
+  <!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+  <main id="app">
+    <!-- ──── HOME VIEW ──── -->
+    <section id="view-home" class="view active">
+      <div class="hero">
+        <div class="hero-glow"></div>
+        <h1 class="hero-title">
+          Maîtrise le <span class="gradient-text">SQL</span><br/>à 100%
+        </h1>
+        <p class="hero-subtitle">
+          Des <strong>SELECT</strong> de base aux <strong>sous-requêtes</strong> avancées.<br/>
+          Quiz QCM, quiz écrit, évaluations et flashcards interactives.
+        </p>
+
+        <div class="home-cards">
+          <!-- Quiz QCM Card -->
+          <div class="home-card" id="home-card-quiz">
+            <div class="home-card-icon">🧠</div>
+            <h2>Quiz QCM</h2>
+            <p>Teste tes connaissances avec des QCM et reçois des explications détaillées.</p>
+            <div class="quiz-config">
+              <label class="config-label">Nombre de questions :</label>
+              <div class="config-options" id="quiz-count-options">
+                <button class="config-btn" data-count="10">10</button>
+                <button class="config-btn active" data-count="20">20</button>
+                <button class="config-btn" data-count="35">35</button>
+                <button class="config-btn" data-count="all">Toutes</button>
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-start-quiz">
+              <span>Lancer le Quiz</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </div>
+
+          <!-- Quiz Écrit Card -->
+          <div class="home-card" id="home-card-written">
+            <div class="home-card-icon">✍️</div>
+            <h2>Quiz Écrit</h2>
+            <p>Écris tes requêtes SQL toi-même puis compare avec la correction.</p>
+            <div class="quiz-config">
+              <label class="config-label">Nombre de questions :</label>
+              <div class="config-options" id="written-count-options">
+                <button class="config-btn" data-count="10">10</button>
+                <button class="config-btn active" data-count="20">20</button>
+                <button class="config-btn" data-count="50">50</button>
+                <button class="config-btn" data-count="all">Toutes</button>
+              </div>
+            </div>
+            <button class="btn-primary btn-written" id="btn-start-written">
+              <span>Lancer le Quiz Écrit</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </div>
+
+          <!-- Évaluations Card -->
+          <div class="home-card" id="home-card-exams">
+            <div class="home-card-icon">📝</div>
+            <h2>Évaluations</h2>
+            <p>Refais les évaluations NS1 et NS2 en conditions réelles avec l'annexe.</p>
+            <div class="exam-list-home" id="exam-list-home"></div>
+            <button class="btn-primary btn-exam" id="btn-goto-exams">
+              <span>Voir les Évaluations</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </div>
+
+          <!-- Révision + Flashcards Row -->
+          <!-- Revision Card -->
+          <div class="home-card" id="home-card-revision">
+            <div class="home-card-icon">🔄</div>
+            <h2>Révision</h2>
+            <p>Reprends les questions où tu t'es trompé.</p>
+            <div class="revision-stats-grid">
+              <div class="revision-count" id="revision-count">
+                <span class="revision-number" id="revision-number">0</span>
+                <span>QCM</span>
+              </div>
+              <div class="revision-count" id="written-revision-count">
+                <span class="revision-number written-rev-num" id="written-revision-number">0</span>
+                <span>Écrit</span>
+              </div>
+            </div>
+            <div class="revision-buttons">
+              <button class="btn-secondary" id="btn-start-revision" disabled>
+                <span>Réviser QCM</span>
+                <span class="btn-arrow">→</span>
+              </button>
+              <button class="btn-secondary btn-written-rev" id="btn-start-written-revision" disabled>
+                <span>Réviser Écrit</span>
+                <span class="btn-arrow">→</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Flashcards Card -->
+          <div class="home-card" id="home-card-flashcards">
+            <div class="home-card-icon">🃏</div>
+            <h2>Flashcards</h2>
+            <p>Retourne les cartes et marque-les réussies ou échouées.</p>
+            <div class="revision-stats-grid">
+              <div class="flashcard-count">
+                <span class="flashcard-number" id="flashcard-number">0</span>
+                <span>cartes</span>
+              </div>
+              <div class="revision-count" id="fc-failed-count-home">
+                <span class="revision-number fc-fail-num" id="fc-failed-number">0</span>
+                <span>à revoir</span>
+              </div>
+            </div>
+            <div class="revision-buttons">
+              <button class="btn-secondary" id="btn-start-flashcards">
+                <span>Toutes les Flashcards</span>
+                <span class="btn-arrow">→</span>
+              </button>
+              <button class="btn-secondary btn-written-rev" id="btn-start-fc-revision" disabled>
+                <span>Revoir échouées</span>
+                <span class="btn-arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── QUIZ QCM VIEW ──── -->
+    <section id="view-quiz" class="view">
+      <div class="quiz-container">
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar" id="quiz-progress-bar"></div>
+          <div class="quiz-progress-text" id="quiz-progress-text">1 / 10</div>
+        </div>
+        <div class="quiz-meta" id="quiz-meta">
+          <span class="badge badge-category" id="quiz-category">SELECT</span>
+          <span class="badge badge-difficulty" id="quiz-difficulty">facile</span>
+        </div>
+        <div class="quiz-question" id="quiz-question">
+          <h2 id="quiz-question-text"></h2>
+        </div>
+        <div class="quiz-options" id="quiz-options"></div>
+        <div class="quiz-explanation hidden" id="quiz-explanation">
+          <div class="explanation-header" id="explanation-header">
+            <span class="explanation-icon" id="explanation-icon"></span>
+            <span class="explanation-title" id="explanation-title"></span>
+          </div>
+          <p id="explanation-text"></p>
+          <button class="btn-primary btn-next" id="btn-next-question">
+            <span>Question suivante</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+      </div>
+      <div class="quiz-results hidden" id="quiz-results">
+        <div class="results-card">
+          <div class="results-icon" id="results-icon">🎉</div>
+          <h2 id="results-title">Bravo !</h2>
+          <div class="results-score">
+            <div class="score-circle" id="score-circle">
+              <svg viewBox="0 0 120 120">
+                <circle class="score-bg" cx="60" cy="60" r="52" />
+                <circle class="score-fill" cx="60" cy="60" r="52" id="score-fill" />
+              </svg>
+              <span class="score-text" id="score-text">0%</span>
+            </div>
+          </div>
+          <div class="results-details">
+            <div class="result-stat"><span class="result-stat-icon correct">✓</span><span id="results-correct">0</span> correctes</div>
+            <div class="result-stat"><span class="result-stat-icon wrong">✗</span><span id="results-wrong">0</span> incorrectes</div>
+          </div>
+          <div class="results-actions">
+            <button class="btn-primary" id="btn-results-home"><span>Retour à l'accueil</span></button>
+            <button class="btn-secondary" id="btn-results-retry" style="display:none;"><span>Réviser les erreurs</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── WRITTEN QUIZ VIEW ──── -->
+    <section id="view-written" class="view">
+      <div class="quiz-container">
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar" id="wq-progress-bar"></div>
+          <div class="quiz-progress-text" id="wq-progress-text">1 / 10</div>
+        </div>
+        <div class="quiz-meta" id="wq-meta">
+          <span class="badge badge-category" id="wq-category">SELECT</span>
+          <span class="badge badge-difficulty" id="wq-difficulty">facile</span>
+          <span class="badge badge-type-written">ÉCRIT</span>
+        </div>
+        <div class="quiz-question" id="wq-question">
+          <h2 id="wq-question-text"></h2>
+        </div>
+        <div class="wq-answer-area" id="wq-answer-area">
+          <label class="wq-label" for="wq-input">Écris ta requête SQL :</label>
+          <textarea class="wq-textarea" id="wq-input" placeholder="SELECT ..." rows="4" spellcheck="false"></textarea>
+          <button class="btn-primary btn-check" id="btn-wq-check">
+            <span>Voir la correction</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+        <div class="wq-correction hidden" id="wq-correction">
+          <div class="wq-correction-section">
+            <div class="wq-correction-label">✏️ Ta réponse :</div>
+            <pre class="wq-code wq-user-code" id="wq-user-answer"></pre>
+          </div>
+          <div class="wq-correction-section">
+            <div class="wq-correction-label">✅ Correction :</div>
+            <pre class="wq-code wq-correct-code" id="wq-correct-answer"></pre>
+          </div>
+          <div class="wq-self-eval">
+            <p class="wq-self-eval-label">As-tu eu juste ?</p>
+            <div class="wq-eval-buttons">
+              <button class="btn-eval btn-eval-correct" id="btn-wq-correct"><span>✓ J'ai réussi</span></button>
+              <button class="btn-eval btn-eval-wrong" id="btn-wq-wrong"><span>✗ J'ai raté</span></button>
+            </div>
+          </div>
+        </div>
+        <!-- Annexe PDF visible below the quiz -->
+        <div class="annexe-section" id="wq-annexe-section">
+          <div class="annexe-header" id="annexe-toggle">
+            <span class="annexe-icon">📎</span>
+            <span>Annexe — Base de données du magasin</span>
+            <span class="annexe-chevron" id="annexe-chevron">▼</span>
+          </div>
+          <div class="annexe-body" id="annexe-body">
+            <iframe src="data/Annexe.pdf" class="annexe-iframe" id="annexe-iframe" title="Annexe PDF"></iframe>
+          </div>
+        </div>
+      </div>
+      <div class="quiz-results hidden" id="wq-results">
+        <div class="results-card">
+          <div class="results-icon" id="wq-results-icon">🎉</div>
+          <h2 id="wq-results-title">Bravo !</h2>
+          <div class="results-score">
+            <div class="score-circle">
+              <svg viewBox="0 0 120 120">
+                <circle class="score-bg" cx="60" cy="60" r="52" />
+                <circle class="score-fill" cx="60" cy="60" r="52" id="wq-score-fill" />
+              </svg>
+              <span class="score-text" id="wq-score-text">0%</span>
+            </div>
+          </div>
+          <div class="results-details">
+            <div class="result-stat"><span class="result-stat-icon correct">✓</span><span id="wq-results-correct">0</span> réussies</div>
+            <div class="result-stat"><span class="result-stat-icon wrong">✗</span><span id="wq-results-wrong">0</span> ratées</div>
+          </div>
+          <div class="results-actions">
+            <button class="btn-primary" id="btn-wq-results-home"><span>Retour à l'accueil</span></button>
+            <button class="btn-secondary" id="btn-wq-results-retry" style="display:none;"><span>Réviser les erreurs</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── EXAMS VIEW ──── -->
+    <section id="view-exams" class="view">
+      <!-- Exam selection screen -->
+      <div class="exam-selection" id="exam-selection">
+        <div class="exam-selection-header">
+          <h2>📝 Évaluations</h2>
+          <p class="exam-selection-subtitle">Refais tes évaluations en conditions réelles.</p>
+        </div>
+        <div class="exam-cards" id="exam-cards"></div>
+      </div>
+
+      <!-- Active exam -->
+      <div class="quiz-container hidden" id="exam-container">
+        <div class="exam-top-bar">
+          <button class="btn-secondary btn-back-exams" id="btn-back-exams">← Retour</button>
+          <div class="exam-info-bar">
+            <span class="badge badge-type-exam" id="exam-badge">NS2</span>
+            <span class="exam-timer" id="exam-timer"></span>
+          </div>
+        </div>
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar" id="exam-progress-bar"></div>
+          <div class="quiz-progress-text" id="exam-progress-text">1 / 9</div>
+        </div>
+        <!-- Question -->
+        <div class="quiz-question" id="exam-question">
+          <div class="exam-points" id="exam-points"></div>
+          <h2 id="exam-question-text"></h2>
+        </div>
+        <!-- Answer area -->
+        <div class="wq-answer-area" id="exam-answer-area">
+          <label class="wq-label" for="exam-input">Ta réponse :</label>
+          <textarea class="wq-textarea" id="exam-input" placeholder="Écris ta réponse ici..." rows="5" spellcheck="false"></textarea>
+          <button class="btn-primary btn-check" id="btn-exam-check">
+            <span>Voir la correction</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+        <!-- Correction -->
+        <div class="wq-correction hidden" id="exam-correction">
+          <div class="wq-correction-section">
+            <div class="wq-correction-label">✏️ Ta réponse :</div>
+            <pre class="wq-code wq-user-code" id="exam-user-answer"></pre>
+          </div>
+          <div class="wq-correction-section">
+            <div class="wq-correction-label">✅ Correction :</div>
+            <pre class="wq-code wq-correct-code" id="exam-correct-answer"></pre>
+          </div>
+          <div class="wq-self-eval">
+            <p class="wq-self-eval-label">As-tu eu juste ?</p>
+            <div class="wq-eval-buttons">
+              <button class="btn-eval btn-eval-correct" id="btn-exam-correct"><span>✓ J'ai réussi</span></button>
+              <button class="btn-eval btn-eval-wrong" id="btn-exam-wrong"><span>✗ J'ai raté</span></button>
+            </div>
+          </div>
+        </div>
+        <!-- Annexe for exams -->
+        <div class="annexe-section" id="exam-annexe-section" style="display:none;">
+          <div class="annexe-header" id="exam-annexe-toggle">
+            <span class="annexe-icon">📎</span>
+            <span>Annexe — Base de données</span>
+            <span class="annexe-chevron" id="exam-annexe-chevron">▼</span>
+          </div>
+          <div class="annexe-body" id="exam-annexe-body">
+            <iframe src="data/Annexe.pdf" class="annexe-iframe" id="exam-annexe-iframe" title="Annexe PDF"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam results -->
+      <div class="quiz-results hidden" id="exam-results">
+        <div class="results-card">
+          <div class="results-icon" id="exam-results-icon">📝</div>
+          <h2 id="exam-results-title">Évaluation terminée !</h2>
+          <div class="results-score">
+            <div class="score-circle">
+              <svg viewBox="0 0 120 120">
+                <circle class="score-bg" cx="60" cy="60" r="52" />
+                <circle class="score-fill" cx="60" cy="60" r="52" id="exam-score-fill" />
+              </svg>
+              <span class="score-text" id="exam-score-text">0%</span>
+            </div>
+          </div>
+          <div class="results-details">
+            <div class="result-stat"><span class="result-stat-icon correct">✓</span><span id="exam-results-correct">0</span> réussies</div>
+            <div class="result-stat"><span class="result-stat-icon wrong">✗</span><span id="exam-results-wrong">0</span> ratées</div>
+          </div>
+          <div class="results-actions">
+            <button class="btn-primary" id="btn-exam-results-home"><span>Retour à l'accueil</span></button>
+            <button class="btn-secondary" id="btn-exam-results-back"><span>Autres évaluations</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── FLASHCARDS VIEW ──── -->
+    <section id="view-flashcards" class="view">
+      <div class="flashcards-container">
+        <div class="flashcards-header">
+          <h2 id="fc-title">Flashcards SQL</h2>
+          <div class="flashcards-nav">
+            <button class="fc-nav-btn" id="fc-prev" title="Précédente">←</button>
+            <span class="fc-counter" id="fc-counter">1 / 10</span>
+            <button class="fc-nav-btn" id="fc-next" title="Suivante">→</button>
+          </div>
+        </div>
+        <div class="flashcard-wrapper" id="flashcard-wrapper">
+          <div class="flashcard" id="flashcard">
+            <div class="flashcard-inner" id="flashcard-inner">
+              <div class="flashcard-front" id="flashcard-front">
+                <div class="fc-label">QUESTION</div>
+                <div class="fc-content" id="fc-front-content"></div>
+                <div class="fc-hint">Clique pour retourner</div>
+              </div>
+              <div class="flashcard-back" id="flashcard-back">
+                <div class="fc-label">RÉPONSE</div>
+                <pre class="fc-code" id="fc-back-content"></pre>
+                <div class="fc-hint">Clique pour retourner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-eval-bar" id="fc-eval-bar">
+          <button class="btn-eval btn-eval-correct fc-eval-btn" id="btn-fc-correct"><span>✓ Réussie</span></button>
+          <button class="btn-eval btn-eval-wrong fc-eval-btn" id="btn-fc-wrong"><span>✗ Échouée</span></button>
+        </div>
+        <div class="flashcard-meta" id="flashcard-meta">
+          <span class="badge badge-category" id="fc-category"></span>
+          <span class="badge badge-difficulty" id="fc-difficulty"></span>
+        </div>
+      </div>
+      <div class="quiz-results hidden" id="fc-results">
+        <div class="results-card">
+          <div class="results-icon" id="fc-results-icon">🃏</div>
+          <h2 id="fc-results-title">Session terminée !</h2>
+          <div class="results-details" style="margin-top:24px;">
+            <div class="result-stat"><span class="result-stat-icon correct">✓</span><span id="fc-results-correct">0</span> réussies</div>
+            <div class="result-stat"><span class="result-stat-icon wrong">✗</span><span id="fc-results-wrong">0</span> échouées</div>
+          </div>
+          <div class="results-actions" style="margin-top:24px;">
+            <button class="btn-primary" id="btn-fc-results-home"><span>Retour à l'accueil</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="bg-particles" id="bg-particles"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
