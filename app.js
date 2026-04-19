@@ -49,6 +49,7 @@
     writtenReviewList: 'sqlmaster_written_review_list',
     fcFailedList: 'sqlmaster_fc_failed_list',
     stats: 'sqlmaster_stats',
+    customFlashcards: 'sqlmaster_custom_flashcards',
   };
 
   function getList(key) {
@@ -66,6 +67,15 @@
     catch { return { totalAnswered: 0, totalCorrect: 0 }; }
   }
   function setStats(s) { localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(s)); }
+  function getCustomFlashcards() { return getList(STORAGE_KEYS.customFlashcards); }
+  function setCustomFlashcards(l) { setList(STORAGE_KEYS.customFlashcards, l); }
+  /** Merge built-in + custom cards, custom ones get id prefix 'c_' */
+  function getAllFlashcards() {
+    const custom = getCustomFlashcards().map((c, i) => ({
+      ...c, id: 'c_' + (c.id || i), _custom: true
+    }));
+    return [...FLASHCARDS, ...custom];
+  }
 
   function shuffle(arr) {
     const a = [...arr];
@@ -215,6 +225,20 @@
     burgerBtn: $('#burger-btn'),
     navLinks: $('#nav-links'),
     drawerOverlay: $('#drawer-overlay'),
+
+    // CSV Import Modal
+    csvModal: $('#csv-modal'),
+    modalClose: $('#modal-close'),
+    modalCancel: $('#modal-cancel'),
+    btnImportConfirm: $('#btn-import-confirm'),
+    csvDropzone: $('#csv-dropzone'),
+    csvFileInput: $('#csv-file-input'),
+    csvResult: $('#csv-result'),
+    csvCustomInfo: $('#csv-custom-info'),
+    customFcCount: $('#custom-fc-count'),
+    btnDeleteCustom: $('#btn-delete-custom'),
+    btnImportCsvHome: $('#btn-import-csv-home'),
+    btnImportCsvFc: $('#btn-import-csv-fc'),
   };
 
   // ── Init ──────────────────────────────────────────────────
@@ -264,6 +288,24 @@
       if (b.dataset.view === 'exams') { navigateTo('exams'); showExamSelection(); }
       else navigateTo(b.dataset.view);
     }));
+
+    // CSV Import
+    els.btnImportCsvHome.addEventListener('click', openCsvModal);
+    els.btnImportCsvFc.addEventListener('click', openCsvModal);
+    els.modalClose.addEventListener('click', closeCsvModal);
+    els.modalCancel.addEventListener('click', closeCsvModal);
+    els.csvModal.addEventListener('click', (e) => { if (e.target === els.csvModal) closeCsvModal(); });
+    els.btnImportConfirm.addEventListener('click', confirmImport);
+    els.btnDeleteCustom.addEventListener('click', deleteCustomCards);
+    els.csvFileInput.addEventListener('change', (e) => handleCsvFile(e.target.files[0]));
+    els.csvDropzone.addEventListener('dragover', (e) => { e.preventDefault(); els.csvDropzone.classList.add('drag-over'); });
+    els.csvDropzone.addEventListener('dragleave', () => els.csvDropzone.classList.remove('drag-over'));
+    els.csvDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      els.csvDropzone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleCsvFile(file);
+    });
 
     // QCM count
     els.quizCountOptions.forEach((b) => b.addEventListener('click', () => {
@@ -399,7 +441,7 @@
     els.writtenRevisionNumber.textContent = wrl.length;
     els.btnStartWrittenRevision.disabled = wrl.length === 0;
 
-    els.flashcardNumber.textContent = FLASHCARDS.length;
+    els.flashcardNumber.textContent = getAllFlashcards().length;
     const fl = getFcFailedList();
     els.fcFailedNumber.textContent = fl.length;
     els.btnStartFcRevision.disabled = fl.length === 0;
@@ -771,13 +813,15 @@
     state.fcWrongCount = 0;
     state.fcEvaluated = false;
 
+    const allCards = getAllFlashcards();
+
     if (mode === 'revision') {
       const ids = getFcFailedList();
       if (ids.length === 0) return;
-      state.fcCards = shuffle(FLASHCARDS.filter((f) => ids.includes(f.id)));
+      state.fcCards = shuffle(allCards.filter((f) => ids.includes(f.id)));
       els.fcTitle.textContent = 'Révision Flashcards';
     } else {
-      state.fcCards = [...FLASHCARDS];
+      state.fcCards = [...allCards];
       els.fcTitle.textContent = 'Flashcards SQL';
     }
 
@@ -794,9 +838,18 @@
     els.fcFrontContent.textContent = fc.front;
     els.fcBackContent.textContent = fc.back;
     els.fcCounter.textContent = `${state.currentFlashcardIndex + 1} / ${state.fcCards.length}`;
-    els.fcCategory.textContent = fc.category;
-    els.fcDifficulty.textContent = fc.difficulty;
-    els.fcDifficulty.setAttribute('data-level', fc.difficulty);
+    els.fcCategory.textContent = fc.category || 'Général';
+    els.fcDifficulty.textContent = fc.difficulty || 'moyen';
+    els.fcDifficulty.setAttribute('data-level', fc.difficulty || 'moyen');
+    // Badge custom
+    const existingBadge = document.querySelector('.badge-custom-fc');
+    if (existingBadge) existingBadge.remove();
+    if (fc._custom) {
+      const badge = document.createElement('span');
+      badge.className = 'badge badge-custom badge-custom-fc';
+      badge.textContent = '⭐ Importée';
+      document.querySelector('.flashcard-meta').appendChild(badge);
+    }
 
     state.fcEvaluated = false;
     els.fcEvalBar.classList.remove('evaluated');
@@ -860,6 +913,168 @@
     const d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  CSV IMPORT MODULE
+  // ══════════════════════════════════════════════════════════
+
+  let _parsedCards = null; // holds parsed cards before user confirms
+
+  function openCsvModal() {
+    _parsedCards = null;
+    els.csvFileInput.value = '';
+    els.csvResult.className = 'csv-result hidden';
+    els.csvResult.textContent = '';
+    els.btnImportConfirm.disabled = true;
+
+    const custom = getCustomFlashcards();
+    if (custom.length > 0) {
+      els.csvCustomInfo.classList.remove('hidden');
+      els.customFcCount.textContent = custom.length;
+    } else {
+      els.csvCustomInfo.classList.add('hidden');
+    }
+
+    els.csvModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCsvModal() {
+    els.csvModal.classList.add('hidden');
+    document.body.style.overflow = '';
+    _parsedCards = null;
+  }
+
+  /**
+   * Robust CSV parser — handles quoted fields with embedded commas/newlines.
+   * Returns array of objects keyed by header row.
+   */
+  function parseCSV(text) {
+    const lines = [];
+    let cur = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '"') {
+        if (inQuotes && text[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+        if (cur.trim() || lines.length) lines.push(cur);
+        cur = '';
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+      } else {
+        cur += ch;
+      }
+    }
+    if (cur.trim()) lines.push(cur);
+
+    const splitLine = (line) => {
+      const fields = [];
+      let field = '';
+      let q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (q && line[i+1] === '"') { field += '"'; i++; } else q = !q; }
+        else if (c === ',' && !q) { fields.push(field.trim()); field = ''; }
+        else field += c;
+      }
+      fields.push(field.trim());
+      return fields;
+    };
+
+    if (lines.length < 2) return [];
+    const headers = splitLine(lines[0]).map(h => h.toLowerCase().trim());
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const vals = splitLine(lines[i]);
+      const obj = {};
+      headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
+      rows.push(obj);
+    }
+    return rows;
+  }
+
+  function handleCsvFile(file) {
+    if (!file) return;
+    if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
+      showCsvResult('error', '❌ Ce fichier n\'est pas un CSV. Vérifie l\'extension (.csv).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const rows = parseCSV(text);
+
+      if (rows.length === 0) {
+        showCsvResult('error', '❌ Fichier vide ou format invalide. Assure-toi d\'avoir une ligne d\'en-tête.');
+        return;
+      }
+
+      // Validate: must have at least "front" and "back"
+      const sample = rows[0];
+      if (!('front' in sample) || !('back' in sample)) {
+        showCsvResult('error', '❌ Colonnes requises manquantes : <strong>front</strong> et <strong>back</strong>.\nEn-tête trouvé : ' + Object.keys(sample).join(', '));
+        return;
+      }
+
+      // Filter out empty rows
+      const valid = rows.filter(r => r.front && r.back);
+      const skipped = rows.length - valid.length;
+
+      _parsedCards = valid.map((r, i) => ({
+        id: 'csv_' + Date.now() + '_' + i,
+        front: r.front,
+        back: r.back,
+        category: r.category || 'Général',
+        difficulty: ['facile','moyen','difficile'].includes(r.difficulty) ? r.difficulty : 'moyen',
+      }));
+
+      const msg = `✅ <strong>${_parsedCards.length} carte${_parsedCards.length > 1 ? 's' : ''}</strong> prête${_parsedCards.length > 1 ? 's' : ''} à importer`
+        + (skipped > 0 ? ` (${skipped} ligne${skipped > 1 ? 's' : ''} ignorée${skipped > 1 ? 's' : ''})` : '')
+        + '.<br><em>Aperçu :</em> «&nbsp;' + escapeHtml(_parsedCards[0].front.slice(0, 60)) + (_parsedCards[0].front.length > 60 ? '…' : '') + '&nbsp;»';
+
+      showCsvResult('success', msg);
+      els.btnImportConfirm.disabled = false;
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function showCsvResult(type, html) {
+    els.csvResult.className = 'csv-result ' + type;
+    els.csvResult.innerHTML = html;
+  }
+
+  function confirmImport() {
+    if (!_parsedCards || _parsedCards.length === 0) return;
+
+    const existing = getCustomFlashcards();
+    const merged = [...existing, ..._parsedCards];
+    setCustomFlashcards(merged);
+
+    showCsvResult('success', `🎉 <strong>${_parsedCards.length} carte${_parsedCards.length > 1 ? 's' : ''}</strong> importée${_parsedCards.length > 1 ? 's' : ''} ! Total : ${merged.length} cartes personnalisées.`);
+    els.btnImportConfirm.disabled = true;
+    els.customFcCount.textContent = merged.length;
+    els.csvCustomInfo.classList.remove('hidden');
+    _parsedCards = null;
+
+    // Refresh stats
+    updateHomeStats();
+    els.csvFileInput.value = '';
+
+    setTimeout(closeCsvModal, 1800);
+  }
+
+  function deleteCustomCards() {
+    if (!confirm('Supprimer toutes les cartes importées ? Cette action est irréversible.')) return;
+    setCustomFlashcards([]);
+    els.csvCustomInfo.classList.add('hidden');
+    els.customFcCount.textContent = '0';
+    showCsvResult('success', '🗑 Toutes les cartes importées ont été supprimées.');
+    updateHomeStats();
   }
 
   document.addEventListener('DOMContentLoaded', init);

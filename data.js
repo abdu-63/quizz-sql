@@ -1417,7 +1417,7 @@ const EXAMS = [
         id: 1,
         points: '',
         question: "Créer la table article (voir annexe pour la structure).",
-        answer: "CREATE TABLE article (\n  idarticle INTEGER NOT NULL,\n  libelle VARCHAR(50) NOT NULL,\n  prix INTEGER NOT NULL,\n  packaging VARCHAR(50) NOT NULL,\n  unitemesure VARCHAR(10) NOT NULL,\n  bio INTEGER NOT NULL,\n  idmarque INTEGER NOT NULL,\n  idrayon INTEGER NOT NULL,\n  CONSTRAINT id_article_pk PRIMARY KEY (idarticle),\n  CONSTRAINT id_marque_fk FOREIGN KEY (idmarque) REFERENCES marque(idmarque),\n  CONSTRAINT id_rayon_fk FOREIGN KEY (idrayon) REFERENCES rayon(idrayon)\n);"
+        answer: "CREATE TABLE article (\n  idarticle INTEGER NOT NULL,\n  libelle VARCHAR(50) NOT NULL,\n  prix INTEGER NOT NULL,\n  packaging VARCHAR(50) NOT NULL,\n  unitemesure VARCHAR(10) NOT NULL,\n  bio INTEGER NOT NULL,\n  idmarque INTEGER NOT NULL FOREIGN KEY REFERENCES marque(idmarque),\n  idrayon INTEGER NOT NULL FOREIGN KEY REFERENCES rayon(idrayon),\n  CONSTRAINT id_article_pk PRIMARY KEY (idarticle);"
       },
       {
         id: 2,

@@ -17,23 +17,6 @@
       <span class="nav-icon">⚡</span>
       <span class="nav-title">SQL<span class="accent">Master</span></span>
     </div>
-    <div class="nav-links" id="nav-links">
-      <button class="nav-btn active" data-view="home" id="nav-home">
-        <span class="nav-btn-icon">🏠</span> Accueil
-      </button>
-      <button class="nav-btn" data-view="quiz" id="nav-quiz">
-        <span class="nav-btn-icon">🧠</span> Quiz
-      </button>
-      <button class="nav-btn" data-view="written" id="nav-written">
-        <span class="nav-btn-icon">✍️</span> Écrit
-      </button>
-      <button class="nav-btn" data-view="exams" id="nav-exams">
-        <span class="nav-btn-icon">📝</span> Évals
-      </button>
-      <button class="nav-btn" data-view="flashcards" id="nav-flashcards">
-        <span class="nav-btn-icon">🃏</span> Flashcards
-      </button>
-    </div>
     <div class="nav-right">
       <div class="nav-stats" id="nav-stats">
         <div class="stat-pill" id="stat-score" title="Score global">
@@ -52,7 +35,25 @@
       </button>
     </div>
   </nav>
-  <!-- Mobile drawer overlay -->
+  <!-- Mobile drawer (outside nav so z-index works correctly) -->
+  <div class="nav-links" id="nav-links">
+    <button class="nav-btn active" data-view="home" id="nav-home">
+      <span class="nav-btn-icon">🏠</span> Accueil
+    </button>
+    <button class="nav-btn" data-view="quiz" id="nav-quiz">
+      <span class="nav-btn-icon">🧠</span> Quiz
+    </button>
+    <button class="nav-btn" data-view="written" id="nav-written">
+      <span class="nav-btn-icon">✍️</span> Écrit
+    </button>
+    <button class="nav-btn" data-view="exams" id="nav-exams">
+      <span class="nav-btn-icon">📝</span> Évals
+    </button>
+    <button class="nav-btn" data-view="flashcards" id="nav-flashcards">
+      <span class="nav-btn-icon">🃏</span> Flashcards
+    </button>
+  </div>
+  <!-- Mobile overlay -->
   <div class="drawer-overlay" id="drawer-overlay"></div>
 
   <!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
@@ -175,6 +176,9 @@
                 <span class="btn-arrow">→</span>
               </button>
             </div>
+            <button class="btn-import-csv" id="btn-import-csv-home">
+              <span class="btn-import-icon">📥</span> Importer des cartes CSV
+            </button>
           </div>
         </div>
       </div>
@@ -409,10 +413,15 @@
       <div class="flashcards-container">
         <div class="flashcards-header">
           <h2 id="fc-title">Flashcards SQL</h2>
-          <div class="flashcards-nav">
-            <button class="fc-nav-btn" id="fc-prev" title="Précédente">←</button>
-            <span class="fc-counter" id="fc-counter">1 / 10</span>
-            <button class="fc-nav-btn" id="fc-next" title="Suivante">→</button>
+          <div class="flashcards-header-right">
+            <button class="btn-import-csv" id="btn-import-csv-fc" title="Importer des flashcards CSV">
+              <span class="btn-import-icon">📥</span> Import CSV
+            </button>
+            <div class="flashcards-nav">
+              <button class="fc-nav-btn" id="fc-prev" title="Précédente">←</button>
+              <span class="fc-counter" id="fc-counter">1 / 10</span>
+              <button class="fc-nav-btn" id="fc-next" title="Suivante">→</button>
+            </div>
           </div>
         </div>
         <div class="flashcard-wrapper" id="flashcard-wrapper">
@@ -457,6 +466,39 @@
   </main>
 
   <div class="bg-particles" id="bg-particles"></div>
+
+  <!-- ──── CSV IMPORT MODAL ──── -->
+  <div class="modal-overlay hidden" id="csv-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📥 Importer des Flashcards</h3>
+        <button class="modal-close" id="modal-close" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="csv-format-info">
+          <p class="csv-format-title">Format CSV attendu (NotebookLM, Anki, etc.) :</p>
+          <pre class="csv-example">front,back,category,difficulty
+Qu'est-ce qu'une clé primaire ?,Un attribut qui identifie...,DDL,facile
+Différence JOIN vs LEFT JOIN ?,JOIN ne garde que...,JOIN,moyen</pre>
+          <p class="csv-format-note">• La ligne d'en-tête est obligatoire<br>• <code>difficulty</code> : <code>facile</code>, <code>moyen</code> ou <code>difficile</code><br>• <code>category</code> et <code>difficulty</code> sont optionnels (défaut : «&nbsp;Général&nbsp;» / «&nbsp;moyen&nbsp;»)<br>• Les champs contenant des virgules doivent être entre guillemets</p>
+        </div>
+        <div class="csv-dropzone" id="csv-dropzone">
+          <div class="csv-dropzone-icon">📂</div>
+          <p class="csv-dropzone-text">Glisse ton fichier CSV ici<br><span>ou clique pour choisir</span></p>
+          <input type="file" id="csv-file-input" accept=".csv,text/csv" class="csv-file-input" />
+        </div>
+        <div class="csv-result hidden" id="csv-result"></div>
+        <div class="csv-custom-info hidden" id="csv-custom-info">
+          <p>Cartes importées actuellement : <strong id="custom-fc-count">0</strong></p>
+          <button class="btn-delete-custom" id="btn-delete-custom">🗑 Supprimer toutes les cartes importées</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel">Annuler</button>
+        <button class="btn-primary" id="btn-import-confirm" disabled>Importer</button>
+      </div>
+    </div>
+  </div>
 
   <script src="data.js"></script>
   <script src="app.js"></script>
