@@ -27,3 +27,7 @@ node_modules/
 
 # Données extraites (fichiers texte générés, pas nécessaires en prod)
 data/extracted/
+
+# PDFs — seul l'Annexe est nécessaire en prod (iframe)
+data/*.pdf
+!data/Annexe.pdf
