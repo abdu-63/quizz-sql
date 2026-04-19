@@ -116,6 +116,11 @@
     examListHome: $('#exam-list-home'),
     btnGotoExams: $('#btn-goto-exams'),
 
+    // Backup
+    btnExportData: $('#btn-export-data'),
+    btnImportData: $('#btn-import-data'),
+    backupFileInput: $('#backup-file-input'),
+
     // Quiz QCM
     quizContainer: $('#view-quiz .quiz-container'),
     quizResults: $('#quiz-results'),
@@ -333,6 +338,11 @@
       const file = e.dataTransfer.files[0];
       if (file) handleCsvFile(file);
     });
+
+    // Backup
+    els.btnExportData.addEventListener('click', exportBackup);
+    els.btnImportData.addEventListener('click', () => els.backupFileInput.click());
+    els.backupFileInput.addEventListener('change', (e) => importBackup(e.target.files[0]));
 
     // QCM count
     els.quizCountOptions.forEach((b) => b.addEventListener('click', () => {
@@ -1102,6 +1112,62 @@
     els.customFcCount.textContent = '0';
     showCsvResult('success', '🗑 Toutes les cartes importées ont été supprimées.');
     updateHomeStats();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  BACKUP MODULE
+  // ══════════════════════════════════════════════════════════
+  function exportBackup() {
+    const backupData = {
+      version: 1,
+      timestamp: new Date().toISOString()
+    };
+    for (const key of Object.values(STORAGE_KEYS)) {
+      const val = localStorage.getItem(key);
+      if (val !== null) backupData[key] = val;
+    }
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const dt = new Date();
+    const dateStr = dt.toISOString().split('T')[0];
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `sqlmaster_sauvegarde_${dateStr}.json`);
+    document.body.appendChild(dlAnchorElem);
+    dlAnchorElem.click();
+    document.body.removeChild(dlAnchorElem);
+  }
+
+  function importBackup(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.version) throw new Error("Fichier de sauvegarde invalide");
+
+        let imported = 0;
+        for (const key of Object.values(STORAGE_KEYS)) {
+          if (data[key] !== undefined) {
+            localStorage.setItem(key, data[key]);
+            imported++;
+          }
+        }
+
+        if (imported > 0) {
+          updateHomeStats();
+          updateNavStats();
+          alert(`✅ Progression restaurée avec succès ! (${imported} champs mis à jour).`);
+        } else {
+          alert('⚠️ Aucune donnée valide trouvée dans la sauvegarde.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('❌ Erreur: Le fichier fourni n\'est pas un fichier de sauvegarde SQLMaster valide.');
+      }
+      els.backupFileInput.value = ''; // reset
+    };
+    reader.readAsText(file);
   }
 
   document.addEventListener('DOMContentLoaded', init);
