@@ -285,8 +285,35 @@
     // Nav
     els.navBtns.forEach((b) => b.addEventListener('click', () => {
       closeDrawer();
-      if (b.dataset.view === 'exams') { navigateTo('exams'); showExamSelection(); }
-      else navigateTo(b.dataset.view);
+      const view = b.dataset.view;
+
+      if (view === 'quiz' && state.quizQuestions.length === 0) {
+        navigateTo('home');
+        alert("Veuillez d'abord choisir vos options et lancer le Quiz QCM depuis l'accueil (1ère fois uniquement).");
+        els.btnStartQuiz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        els.btnStartQuiz.style.boxShadow = '0 0 0 4px var(--accent-blue)';
+        setTimeout(() => els.btnStartQuiz.style.boxShadow = '', 1500);
+        return;
+      }
+      if (view === 'written' && state.wqQuestions.length === 0) {
+        navigateTo('home');
+        alert("Veuillez d'abord lancer le Quiz Écrit depuis l'accueil (1ère fois uniquement).");
+        els.btnStartWritten.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        els.btnStartWritten.style.boxShadow = '0 0 0 4px var(--accent-orange)';
+        setTimeout(() => els.btnStartWritten.style.boxShadow = '', 1500);
+        return;
+      }
+      if (view === 'flashcards' && state.fcCards.length === 0) {
+        navigateTo('home');
+        alert("Veuillez d'abord lancer les Flashcards depuis l'accueil (1ère fois uniquement).");
+        els.btnStartFlashcards.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        els.btnStartFlashcards.style.boxShadow = '0 0 0 4px var(--accent-blue)';
+        setTimeout(() => els.btnStartFlashcards.style.boxShadow = '', 1500);
+        return;
+      }
+
+      if (view === 'exams') { navigateTo('exams'); showExamSelection(); }
+      else navigateTo(view);
     }));
 
     // CSV Import
