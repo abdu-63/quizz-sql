@@ -136,6 +136,7 @@
     // Backup
     btnExportData: $('#btn-export-data'),
     btnImportData: $('#btn-import-data'),
+    btnResetScore: $('#btn-reset-score'),
     backupFileInput: $('#backup-file-input'),
 
     // Quiz QCM
@@ -381,6 +382,15 @@
     els.btnExportData.addEventListener('click', exportBackup);
     els.btnImportData.addEventListener('click', () => els.backupFileInput.click());
     els.backupFileInput.addEventListener('change', (e) => importBackup(e.target.files[0]));
+    
+    if (els.btnResetScore) {
+      els.btnResetScore.addEventListener('click', () => {
+        if (confirm("Es-tu sûr(e) de vouloir réinitialiser le score de ton trophée ?\nToutes tes stats globales (questions répondues et correctes) seront remises à zéro.")) {
+           setStats({ totalAnswered: 0, totalCorrect: 0 });
+           updateNavStats();
+        }
+      });
+    }
 
     // QCM count
     els.quizCountOptions.forEach((b) => b.addEventListener('click', () => {
