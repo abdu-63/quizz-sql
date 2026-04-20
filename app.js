@@ -14,6 +14,7 @@
     quizQuestions: [],
     currentQuestionIndex: 0,
     selectedCount: 20,
+    selectedFilter: 'all',
     correctCount: 0,
     wrongCount: 0,
     answered: false,
@@ -22,6 +23,7 @@
     wqQuestions: [],
     wqCurrentIndex: 0,
     wqSelectedCount: 20,
+    wqSelectedFilter: 'all',
     wqCorrectCount: 0,
     wqWrongCount: 0,
     wqChecked: false,
@@ -50,6 +52,8 @@
     fcFailedList: 'sqlmaster_fc_failed_list',
     stats: 'sqlmaster_stats',
     customFlashcards: 'sqlmaster_custom_flashcards',
+    answeredQcm: 'sqlmaster_answered_qcm',
+    answeredWritten: 'sqlmaster_answered_written',
   };
 
   function getList(key) {
@@ -69,6 +73,12 @@
   function setStats(s) { localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(s)); }
   function getCustomFlashcards() { return getList(STORAGE_KEYS.customFlashcards); }
   function setCustomFlashcards(l) { setList(STORAGE_KEYS.customFlashcards, l); }
+  function getAnsweredQcm() { return getList(STORAGE_KEYS.answeredQcm); }
+  function setAnsweredQcm(l) { setList(STORAGE_KEYS.answeredQcm, l); }
+  function markQcmAnswered(id) { const l = getAnsweredQcm(); if(!l.includes(id)) { l.push(id); setAnsweredQcm(l); } }
+  function getAnsweredWritten() { return getList(STORAGE_KEYS.answeredWritten); }
+  function setAnsweredWritten(l) { setList(STORAGE_KEYS.answeredWritten, l); }
+  function markWrittenAnswered(id) { const l = getAnsweredWritten(); if(!l.includes(id)) { l.push(id); setAnsweredWritten(l); } }
   /** Merge built-in + custom cards, custom ones get id prefix 'c_' */
   function getAllFlashcards() {
     const custom = getCustomFlashcards().map((c, i) => ({
@@ -105,10 +115,12 @@
 
     // Home
     quizCountOptions: $$('#quiz-count-options .config-btn'),
+    quizFilterOptions: $$('#quiz-filter-options .config-btn'),
     btnStartQuiz: $('#btn-start-quiz'),
     btnStartRevision: $('#btn-start-revision'),
     revisionNumber: $('#revision-number'),
     writtenCountOptions: $$('#written-count-options .config-btn'),
+    writtenFilterOptions: $$('#written-filter-options .config-btn'),
     btnStartWritten: $('#btn-start-written'),
     btnStartWrittenRevision: $('#btn-start-written-revision'),
     writtenRevisionNumber: $('#written-revision-number'),
@@ -373,12 +385,30 @@
       state.selectedCount = b.dataset.count === 'all' ? 'all' : parseInt(b.dataset.count);
     }));
 
+    // QCM filter
+    if (els.quizFilterOptions) {
+      els.quizFilterOptions.forEach((b) => b.addEventListener('click', () => {
+        els.quizFilterOptions.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        state.selectedFilter = b.dataset.filter;
+      }));
+    }
+
     // Written count
     els.writtenCountOptions.forEach((b) => b.addEventListener('click', () => {
       els.writtenCountOptions.forEach((x) => x.classList.remove('active'));
       b.classList.add('active');
       state.wqSelectedCount = b.dataset.count === 'all' ? 'all' : parseInt(b.dataset.count);
     }));
+
+    // Written filter
+    if (els.writtenFilterOptions) {
+      els.writtenFilterOptions.forEach((b) => b.addEventListener('click', () => {
+        els.writtenFilterOptions.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        state.wqSelectedFilter = b.dataset.filter;
+      }));
+    }
 
     // Start buttons
     els.btnStartQuiz.addEventListener('click', () => startQuiz('normal'));
@@ -560,7 +590,17 @@
       if (ids.length === 0) return;
       state.quizQuestions = shuffle(QUESTIONS.filter((q) => ids.includes(q.id)));
     } else {
-      const s = shuffle(QUESTIONS);
+      let pool = QUESTIONS;
+      if (state.selectedFilter === 'new') {
+        const answeredIds = getAnsweredQcm();
+        pool = QUESTIONS.filter(q => !answeredIds.includes(q.id));
+        if (pool.length === 0) {
+          alert("Tu as déjà répondu à toutes les questions !");
+          pool = QUESTIONS;
+          if (els.quizFilterOptions && els.quizFilterOptions[0]) els.quizFilterOptions[0].click();
+        }
+      }
+      const s = shuffle(pool);
       const c = state.selectedCount === 'all' ? s.length : Math.min(state.selectedCount, s.length);
       state.quizQuestions = s.slice(0, c);
     }
@@ -621,6 +661,7 @@
       if (!rl.includes(q.id)) { rl.push(q.id); setReviewList(rl); }
     }
     setStats(stats);
+    markQcmAnswered(q.id); // Mark as done!
     updateNavStats();
 
     els.quizExplanation.classList.remove('hidden');
@@ -697,7 +738,17 @@
       if (ids.length === 0) return;
       state.wqQuestions = shuffle(WRITTEN_QUESTIONS.filter((q) => ids.includes(q.id)));
     } else {
-      const s = shuffle(WRITTEN_QUESTIONS);
+      let pool = WRITTEN_QUESTIONS;
+      if (state.wqSelectedFilter === 'new') {
+        const wqAnsweredIds = getAnsweredWritten();
+        pool = WRITTEN_QUESTIONS.filter(q => !wqAnsweredIds.includes(q.id));
+        if (pool.length === 0) {
+          alert("Tu as déjà répondu à toutes les questions écrites !");
+          pool = WRITTEN_QUESTIONS;
+          if (els.writtenFilterOptions && els.writtenFilterOptions[0]) els.writtenFilterOptions[0].click();
+        }
+      }
+      const s = shuffle(pool);
       const c = state.wqSelectedCount === 'all' ? s.length : Math.min(state.wqSelectedCount, s.length);
       state.wqQuestions = s.slice(0, c);
     }
@@ -765,6 +816,7 @@
     }
 
     setStats(stats);
+    markWrittenAnswered(q.id); // Mark as done!
     updateNavStats();
     setTimeout(nextWrittenQuestion, 800);
   }
