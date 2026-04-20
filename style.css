@@ -605,10 +605,43 @@ body {
 }
 
 /* Meta badges */
+.quiz-meta-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
 .quiz-meta {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+}
+
+.btn-prev-question {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-out);
+}
+
+.btn-prev-question:hover:not(:disabled) {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+}
+
+.btn-prev-question:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .badge {
