@@ -107,6 +107,13 @@
             <h2>Quiz Écrit</h2>
             <p>Écris tes requêtes SQL toi-même puis compare avec la correction.</p>
             <div class="quiz-config" style="margin-bottom: 12px;">
+              <label class="config-label">Mots-clés (aide) :</label>
+              <div class="config-options" id="written-wordbank-options">
+                <button class="config-btn active" data-wordbank="on">Oui</button>
+                <button class="config-btn" data-wordbank="off">Non</button>
+              </div>
+            </div>
+            <div class="quiz-config" style="margin-bottom: 12px;">
               <label class="config-label">Questions :</label>
               <div class="config-options" id="written-filter-options">
                 <button class="config-btn active" data-filter="all">Toutes</button>
@@ -286,8 +293,18 @@
           <h2 id="wq-question-text"></h2>
         </div>
         <div class="wq-answer-area" id="wq-answer-area">
-          <label class="wq-label" for="wq-input">Écris ta requête SQL :</label>
-          <textarea class="wq-textarea" id="wq-input" placeholder="SELECT ..." rows="4" spellcheck="false"></textarea>
+          <div class="wq-label-flex">
+            <label class="wq-label" for="wq-input" style="margin-bottom: 0;">Écris ta requête SQL :</label>
+            <button class="btn-toggle-wordbank" id="btn-toggle-wordbank">💡 Mots-clés</button>
+          </div>
+          
+          <div class="wq-layout-flex" id="wq-layout-flex">
+            <div class="wq-textarea-wrapper">
+              <textarea class="wq-textarea" id="wq-input" placeholder="SELECT ..." rows="4" spellcheck="false"></textarea>
+            </div>
+            <div class="wq-word-bank" id="wq-word-bank"></div>
+          </div>
+
           <button class="btn-primary btn-check" id="btn-wq-check">
             <span>Voir la correction</span>
             <span class="btn-arrow">→</span>

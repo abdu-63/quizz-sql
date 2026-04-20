@@ -24,6 +24,7 @@
     wqCurrentIndex: 0,
     wqSelectedCount: 20,
     wqSelectedFilter: 'all',
+    wordBankEnabled: true,
     wqCorrectCount: 0,
     wqWrongCount: 0,
     wqChecked: false,
@@ -121,6 +122,7 @@
     revisionNumber: $('#revision-number'),
     writtenCountOptions: $$('#written-count-options .config-btn'),
     writtenFilterOptions: $$('#written-filter-options .config-btn'),
+    writtenWordBankOptions: $$('#written-wordbank-options .config-btn'),
     btnStartWritten: $('#btn-start-written'),
     btnStartWrittenRevision: $('#btn-start-written-revision'),
     writtenRevisionNumber: $('#written-revision-number'),
@@ -170,6 +172,8 @@
     wqQuestionText: $('#wq-question-text'),
     wqAnswerArea: $('#wq-answer-area'),
     wqInput: $('#wq-input'),
+    wqWordBank: $('#wq-word-bank'),
+    btnToggleWordbank: $('#btn-toggle-wordbank'),
     btnWqCheck: $('#btn-wq-check'),
     wqCorrection: $('#wq-correction'),
     wqUserAnswer: $('#wq-user-answer'),
@@ -410,6 +414,15 @@
       }));
     }
 
+    // Written wordbank toggle
+    if (els.writtenWordBankOptions) {
+      els.writtenWordBankOptions.forEach((b) => b.addEventListener('click', () => {
+        els.writtenWordBankOptions.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        state.wordBankEnabled = b.dataset.wordbank === 'on';
+      }));
+    }
+
     // Start buttons
     els.btnStartQuiz.addEventListener('click', () => startQuiz('normal'));
     els.btnStartRevision.addEventListener('click', () => startQuiz('revision'));
@@ -432,6 +445,18 @@
     els.btnWqResultsHome.addEventListener('click', () => navigateTo('home'));
     els.btnWqResultsRetry.addEventListener('click', () => startWrittenQuiz('revision'));
     els.btnWqPrev.addEventListener('click', prevWrittenQuestion);
+
+    if (els.btnToggleWordbank) {
+      els.btnToggleWordbank.addEventListener('click', () => {
+        state.wordBankEnabled = !state.wordBankEnabled;
+        if (els.writtenWordBankOptions) {
+          els.writtenWordBankOptions.forEach((x) => x.classList.remove('active'));
+          const btnToActive = Array.from(els.writtenWordBankOptions).find(b => b.dataset.wordbank === (state.wordBankEnabled ? 'on' : 'off'));
+          if (btnToActive) btnToActive.classList.add('active');
+        }
+        renderWordBank();
+      });
+    }
 
     // Annexe toggle (written quiz)
     els.annexeToggle.addEventListener('click', () => {
@@ -773,6 +798,7 @@
     els.wqQuestionText.textContent = q.question;
 
     els.wqInput.value = '';
+    renderWordBank();
     els.wqAnswerArea.classList.remove('hidden');
     els.wqCorrection.classList.add('hidden');
     els.btnWqCorrect.classList.remove('active-correct');
@@ -780,6 +806,40 @@
     state.wqChecked = false;
     state.wqEvaluated = false;
     setTimeout(() => els.wqInput.focus(), 100);
+  }
+
+  const SQL_WORDS = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'ON', 'GROUP BY', 'ORDER BY', '*', '=', '>', '<', 'LIKE', 'IN'];
+
+  function renderWordBank() {
+    els.wqWordBank.innerHTML = '';
+    if (!state.wordBankEnabled) {
+      els.wqWordBank.classList.add('hidden');
+      return;
+    }
+    els.wqWordBank.classList.remove('hidden');
+    SQL_WORDS.forEach(w => {
+      const btn = document.createElement('button');
+      btn.className = 'sql-word-btn';
+      btn.textContent = w;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        insertAtCursor(els.wqInput, w + ' ');
+      });
+      els.wqWordBank.appendChild(btn);
+    });
+  }
+
+  function insertAtCursor(myField, myValue) {
+    if (myField.selectionStart || myField.selectionStart === '0' || myField.selectionStart === 0) {
+      var startPos = myField.selectionStart;
+      var endPos = myField.selectionEnd;
+      myField.value = myField.value.substring(0, startPos) + myValue + myField.value.substring(endPos, myField.value.length);
+      myField.selectionStart = startPos + myValue.length;
+      myField.selectionEnd = startPos + myValue.length;
+    } else {
+      myField.value += myValue;
+    }
+    myField.focus();
   }
 
   function checkWrittenAnswer() {

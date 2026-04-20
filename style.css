@@ -1537,6 +1537,70 @@ body {
   font-style: italic;
 }
 
+/* Layout with word bank */
+.wq-label-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.btn-toggle-wordbank {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+.btn-toggle-wordbank:hover {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-blue);
+}
+
+.wq-layout-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.wq-textarea-wrapper {
+  width: 100%;
+}
+.wq-word-bank {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  order: -1; /* Place le bloc au-dessus du textarea */
+}
+.wq-word-bank.hidden {
+  display: none;
+}
+.sql-word-btn {
+  padding: 6px 10px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+.sql-word-btn:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+.sql-word-btn:active {
+  transform: translateY(0);
+}
+
 .btn-check {
   margin-top: 12px;
   width: auto;
@@ -2272,6 +2336,14 @@ body {
 }
 
 @media (max-width: 640px) {
+  .wq-layout-flex {
+    flex-direction: column;
+  }
+  .wq-word-bank {
+    width: 100%;
+    order: -1;
+    margin-bottom: 8px;
+  }
   .flashcards-header {
     flex-direction: column;
     align-items: flex-start;
