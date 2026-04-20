@@ -1012,10 +1012,13 @@
   function evaluateExam(ok) {
     if (state.examEvaluated) return;
     state.examEvaluated = true;
+    const stats = getStats();
+    stats.totalAnswered++;
 
     if (ok) {
       state.examHistory[state.examCurrentIndex] = true;
       state.examCorrectCount++;
+      stats.totalCorrect++;
       els.btnExamCorrect.classList.add('active-correct');
     } else {
       state.examHistory[state.examCurrentIndex] = false;
@@ -1023,6 +1026,8 @@
       els.btnExamWrong.classList.add('active-wrong');
     }
 
+    setStats(stats);
+    updateNavStats();
     setTimeout(nextExamQuestion, 800);
   }
 
@@ -1031,8 +1036,12 @@
       const wasCorrect = state.examHistory[state.examCurrentIndex - 1];
       if (wasCorrect !== undefined) {
         state.examHistory[state.examCurrentIndex - 1] = undefined;
-        if (wasCorrect) state.examCorrectCount--;
-        else state.examWrongCount--;
+        const stats = getStats();
+        stats.totalAnswered--;
+        if (wasCorrect) { state.examCorrectCount--; stats.totalCorrect--; }
+        else { state.examWrongCount--; }
+        setStats(stats);
+        updateNavStats();
       }
       state.examCurrentIndex--;
       renderExamQuestion();
@@ -1116,9 +1125,12 @@
     state.fcEvaluated = true;
     const fc = state.fcCards[state.currentFlashcardIndex];
     els.fcEvalBar.classList.add('evaluated');
+    const stats = getStats();
+    stats.totalAnswered++;
 
     if (ok) {
       state.fcCorrectCount++;
+      stats.totalCorrect++;
       els.btnFcCorrect.classList.add('selected', 'active-correct');
       const fl = getFcFailedList();
       if (fl.includes(fc.id)) setFcFailedList(fl.filter((id) => id !== fc.id));
@@ -1129,6 +1141,7 @@
       if (!fl.includes(fc.id)) { fl.push(fc.id); setFcFailedList(fl); }
     }
 
+    setStats(stats);
     updateNavStats();
     setTimeout(() => {
       const next = state.currentFlashcardIndex + 1;
