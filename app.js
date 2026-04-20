@@ -109,7 +109,6 @@
     viewFlashcards: $('#view-flashcards'),
     navBtns: $$('.nav-btn[data-view]'),
     statScoreValue: $('#stat-score-value'),
-    statReviewValue: $('#stat-review-value'),
     themeToggle: $('#theme-toggle'),
     themeIcon: $('#theme-icon'),
     navBrand: $('.nav-brand'),
@@ -575,9 +574,9 @@
   function updateNavStats() {
     const stats = getStats();
     const pct = stats.totalAnswered > 0 ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
-    els.statScoreValue.textContent = pct + '%';
-    const total = getReviewList().length + getWrittenReviewList().length;
-    els.statReviewValue.textContent = total;
+    if(els.statScoreValue) {
+      els.statScoreValue.textContent = pct + '%';
+    }
   }
 
   function updateHomeStats() {
